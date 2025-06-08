@@ -37,6 +37,8 @@
 #include "stem_mapping.h"
 #include "stem_matching.h"
 
+#include <chrono>
+
 using namespace pcl::console;
 
 void
@@ -68,6 +70,8 @@ main(int argc, char** argv) {
     std::string filename_source = argv[1];
     std::string filename_target = argv[2];
     std::string filename_result = argv[3];
+
+    auto begin = std::chrono::steady_clock::now();
 
     double tic, toc, time_val = 0.0;
     double stem_mapping1 = 0, stem_mapping2 = 0, match_time = 0;
@@ -139,6 +143,11 @@ main(int argc, char** argv) {
     print_value("%f", time_val);
     print_info(" s.\n");
     
+    auto end = std::chrono::steady_clock::now();
+	std::chrono::duration<double> past = std::chrono::duration_cast<std::chrono::duration<double>>(end - begin);
+    print_info("====> [All time for registration] ");
+    print_value("%f", past.count());
+    print_info(" s.\n");
     //============================ Output Matrix ==========================
     writeTransformationMatrix(filename_result + "_matrix.txt", mat_crs);
 
@@ -148,11 +157,13 @@ main(int argc, char** argv) {
         timeFile << std::setprecision(8) << std::fixed << stem_mapping2 << "\n";
         timeFile << std::setprecision(8) << std::fixed << match_time << "\n";
         timeFile << std::setprecision(8) << std::fixed << time_val << "\n";
+        timeFile << std::setprecision(8) << std::fixed << past.count() << "\n";
         timeFile.close();
     } else {
         // handle error or throw exception
         std::cerr << "Unable to open file: " + filename_result + "_time.txt" << std::endl;
     }
+    
     return 0;
 }
 
