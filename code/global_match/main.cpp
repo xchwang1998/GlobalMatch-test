@@ -70,6 +70,7 @@ main(int argc, char** argv) {
     std::string filename_result = argv[3];
 
     double tic, toc, time_val = 0.0;
+    double stem_mapping1 = 0, stem_mapping2 = 0, match_time = 0;
     //============================= Load Data =============================
     std::cout << "1. LOADING RAW POINT CLOUDS:" << std::endl;
     Cloud3D::Ptr cloud_src(new Cloud3D), cloud_tgt(new Cloud3D);
@@ -104,6 +105,8 @@ main(int argc, char** argv) {
     print_info(" source stem positions in ");
     print_value("%f", toc - tic);
     print_info(" s.\n");
+    stem_mapping1 = toc - tic;
+    
     tic = omp_get_wtime();
     mapping.setInputCloud(cloud_tgt->makeShared());
     mapping.extract(cloud_pos_tgt);
@@ -114,6 +117,7 @@ main(int argc, char** argv) {
     print_info(" target stem positions in ");
     print_value("%f", toc - tic);
     print_info(" s.\n");
+    stem_mapping2 = toc - tic;
 
     std::cout << "3. MATCHING STEMS:" << std::endl;
     tic = omp_get_wtime();
@@ -129,14 +133,26 @@ main(int argc, char** argv) {
     print_info(" pairs of correspondences in ");
     print_value("%f", toc - tic);
     print_info(" s.\n");
+    match_time = toc - tic;
 
     print_info("====> [Total running time] ");
     print_value("%f", time_val);
     print_info(" s.\n");
-
+    
     //============================ Output Matrix ==========================
-    writeTransformationMatrix(filename_result, mat_crs);
+    writeTransformationMatrix(filename_result + "_matrix.txt", mat_crs);
 
+    std::ofstream timeFile(filename_result + "_time.txt");
+    if (timeFile.is_open()) {
+        timeFile << std::setprecision(8) << std::fixed << stem_mapping1 << "\n";
+        timeFile << std::setprecision(8) << std::fixed << stem_mapping2 << "\n";
+        timeFile << std::setprecision(8) << std::fixed << match_time << "\n";
+        timeFile << std::setprecision(8) << std::fixed << time_val << "\n";
+        timeFile.close();
+    } else {
+        // handle error or throw exception
+        std::cerr << "Unable to open file: " + filename_result + "_time.txt" << std::endl;
+    }
     return 0;
 }
 
